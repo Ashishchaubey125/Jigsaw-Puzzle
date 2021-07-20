@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <meta charset="utf-8">
+    <base target="_parent" />
+    <title>Jigsaw Puzzle</title>
+    <!-- Latest compiled and minified CSS -->
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap.min.css" rel="stylesheet" />
+    <!-- Styles -->
+    <link rel="stylesheet" href="../css/puzzle.css">
+    <link rel="stylesheet" href="demo.css">
+    <!-- Include Polyfills First -->
+    <script src="https://cdn.polyfill.io/v2/polyfill.min.js?features=default"></script>
+    <script src="../js/puzzle.js"></script>
+</head>
+
+<body class="center-content">
+    
+    <input type="checkbox" name="options" id="options" style="display: none;">
+
+    <label for="options" class="controls no-select">Settings</label>
+
+    <div id="puzzle1" style="padding: 20px;"></div>
+
+    <div class="options">
+        <div class="fgroup grid">
+            <div class="fieldset">
+                <label for="numrows"># of rows</label>
+                <input type="number" id="numrows" name="numrows" value="3" min="1" max="10">
+
+                <label for="numcolumns"># of columns</label>
+                <input type="number" id="numcolumns" name="numcolumns" value="3" min="1" max="10">
+            </div>
+        </div>
+
+       
+
+        <div class="fgroup no-select">
+            <div class="fieldset difficulty">
+                <input type="radio" id="easy" name="difficulty" value="easy">
+                <label for="easy">Easy</label>
+
+                <input type="radio" id="normal" name="difficulty" value="normal">
+                <label for="normal">Normal</label>
+
+                <input type="radio" id="hard" name="difficulty" value="hard">
+                <label for="hard">Hard</label>
+
+                <input type="radio" id="expert" name="difficulty" value="expert" checked>
+                <label for="expert">Expert</label>
+            </div>
+        </div>
+
+        <div class="btngroup">
+            <div class="ui-btn no-select" data-attr="reset">UPDATE</div>
+        </div>
+    </div>
+
+    <div data-attr="reset" class="controls no-select" style="display: inline-block;">SHUFFLE</div>
+
+    <script type="text/javascript">
+
+        document.addEventListener('DOMContentLoaded',function() {
+            function getURLParameter(sParam) {
+                const sPageURL = decodeURIComponent(window.location.search.substring(1)),
+                    sURLVariables = sPageURL.split('&');
+                let sParameterName,
+                    i;
+
+                for (i = 0; i < sURLVariables.length; i++) {
+                    sParameterName = sURLVariables[i].split('=');
+
+                    if (sParameterName[0] === sParam) {
+                        return sParameterName[1] === undefined ? true : sParameterName[1];
+                    }
+                }
+            }
+
+            const opts = {};
+            const image = (getURLParameter('image')) ? getURLParameter('image') : "https://images.unsplash.com/photo-1548161955-40def7e9742d";
+            const puzzle1 = document.querySelector('#puzzle1');
+            puzzle1.pz = new Puzzle({
+                el           : puzzle1,
+                image        : image,
+                difficulty   : "expert",
+                dragenter    : function(evt){onDragEnter(evt)},
+                dragleave    : function(evt){onDragLeave(evt)},
+                mousedown    : function(evt){onMouseDown(evt)},
+                mouseup      : function(evt){onMouseUp(evt)},
+                finished     : function(evt){puzzleFin(evt)}
+            }).init();
+
+            // Puzzle events
+
+            function onDragEnter(evt) {
+                if (!evt.target.draggable) { 
+                    evt.target.classList.add('highlight');
+                }
+            }
+
+            function onDragLeave(evt) {
+                if (!evt.target.draggable) {
+                    evt.target.classList.remove('highlight');
+                }
+            }
+
+            function onMouseDown(evt) {
+                evt.target.children[0].classList.add('highlight');
+            }
+
+            function onMouseUp(evt) {
+                evt.target.children[0].classList.remove('highlight');
+            }
+
+            function puzzleFin(evt) {
+                setTimeout(function() {
+                    Object.assign(evt.self.fullImg.style,{'opacity':1,'z-index':1});
+                }.bind(evt),300); 
+            }
+
+            // Update buttons
+            document.querySelectorAll('div[data-attr="reset"]').forEach(function(item){
+                item.addEventListener('click',function(evt){
+                    updatePuzzle(evt);
+                });
+            });
+            
+            // Make sure number inputs are between 1 and 10
+            document.querySelectorAll('input[type="number"]').forEach(function(item){
+                item.addEventListener('change',function(){
+                    if (Number(this.value) > 10) {
+                        this.value = 10;
+                    } else if (Number(this.value) <= 0) {
+                        this.value = 1;
+                    }
+                });
+            });
+
+            // Update puzzle and reinitialize
+            function updatePuzzle() {
+                document.querySelectorAll('.options input').forEach(function(item){
+                    if (item.value.length && item.type === "text" || item.type === "number") {
+                        opts[item.name] = item.value;
+                    }
+
+                    if (item.value.length && item.type === "radio" && item.checked) {
+                        opts[item.name] = item.value;
+                    }
+                });
+                puzzle1.pz.usropts = opts;
+                puzzle1.pz.init();      
+            }
+        });
+    </script>
+</body>
+</html>
